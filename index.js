@@ -1,13 +1,15 @@
 require("dotenv").config();
 
-const server = require("./Utils/server");
-const { connect } = require("./Utils/database");
+const serverFunc = require("./Utils/server");
+const db = require("./Utils/database");
 
 //run the app
 (async function run() {
   try {
+    //inject db to server
+    const server = serverFunc(db);
     //connect to db
-    await connect();
+    await db.connect();
     console.log("DB connected!");
     // listen on port number
     server.listen(process.env.PORT, () => {

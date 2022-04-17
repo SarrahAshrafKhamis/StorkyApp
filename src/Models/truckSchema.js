@@ -11,15 +11,20 @@ const Schema = new mongoose.Schema({
   },
   parcels: [
     {
-      parcel: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: "Parcel",
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
+      type: new mongoose.Schema(
+        {
+          parcel: {
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: "Parcel",
+            required: true,
+          },
+          quantity: {
+            type: Number,
+            required: true,
+          },
+        },
+        { timestamps: { currentTime: () => Math.floor(Date.now() / 1000) } }
+      ),
     },
   ],
 });

@@ -1,63 +1,57 @@
 const { validationResult } = require("express-validator");
+const handleErrors = require("../../Utils/errorHandler");
 
-const Parcel = require("../Models/parcelSchema");
+module.exports = (db) => {
+  let postParcel = async (req, res, next) => {
+    //validation errors
+    let errors = validationResult(req);
+    handleErrors(errors, next);
 
-exports.postParcel = (req, res, next) => {
-  //validation errors
-  let errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    let error = new Error();
-    error.status = 422;
-    error.message = errors
-      .array()
-      .reduce((current, object) => current + object.msg + " ", "");
-    next(error);
-  }
-
-  new Parcel({
-    name: req.body.name,
-    weight: req.body.weight,
-  })
-    .save()
-    .then((data) => {
-      res.status(201).json({ message: "added", data: data });
-    })
-    .catch((error) => {
-      next(error);
-    });
-};
-
-exports.getAllParcels = (req, res, next) => {
-  Parcel.find({})
-    .then((data) => {
-      res.status(200).json({ data: data });
-    })
-    .catch((error) => {
-      next(error);
-    });
-};
-
-exports.getParcel = (req, res, next) => {
-  //validation errors
-  let errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    let error = new Error();
-    error.status = 422;
-    error.message = errors
-      .array()
-      .reduce((current, object) => current + object.msg + " ", "");
-    next(error);
-  }
-
-  Parcel.findById(req.params.id)
-    .then((data) => {
-      if (!data) {
-        res.status(404).json({ message: "parcel not found" });
+    try {
+      let parcel = await db.postParcel(req.body.name, req.body.weight);
+      if (parcel) {
+        res.status(201).json({ message: "added", data: parcel });
       } else {
-        res.status(200).json({ data: data });
+        res.sendStatus(400);
       }
-    })
-    .catch((error) => {
+    } catch (error) {
       next(error);
-    });
+    }
+  };
+
+  let getAllParcels = async (req, res, next) => {
+    try {
+      let parcels = await db.getAllParcels();
+      if (parcels) {
+        res.status(200).json({ data: parcels });
+      } else {
+        res.sendStatus(400);
+      }
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  let getParcel = async (req, res, next) => {
+    //validation errors
+    let errors = validationResult(req);
+    handleErrors(errors, next);
+
+    try {
+      let parcel = await db.getParcelById(req.params.id);
+      if (parcel) {
+        res.status(200).json({ data: parcel });
+      } else {
+        res.status(404).json({ message: "parcel not found" });
+      }
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  return {
+    postParcel: postParcel,
+    getAllParcels: getAllParcels,
+    getParcel: getParcel,
+  };
 };
